@@ -20,7 +20,6 @@ Bestätigung Ihrer Bestellung {{name}}
     a, a:hover, a:active, a:visited { color: {{ shop.email_accent_color }}; }
   </style>
 </head>
-
   <body>
     <table class="body">
       <tr>
