@@ -1,11 +1,15 @@
 ----
 Rechnung {{name}}
 ----
-{% capture email_title %}
-Vervollständigen Sie Ihren Kauf{% endcapture %}
-{% capture email_body %}{% if item_count > 1 %}
-Diese Artikel werden{% else %}
-Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_until | date: "%B %d, %Y at %I:%M %p %Z" }}</strong> reserviert.{% endcapture %}
+{% if refund_line_items.size == item_count %}
+  {% capture email_title %}Ihre Bestellung wurde zurückerstattet{% endcapture %}
+{% elsif refund_line_items.size == 0 %}
+  {% capture email_title %}Sie haben eine Rückerstattung erhalten {% endcapture %}
+{% else %}
+  {% capture email_title %}
+Einige Artikel in Ihrer Bestellung wurden zurückerstattet {% endcapture %}
+{% endif %}
+{% capture email_body %}Eine Rückerstattung in Höhe von: <strong>{{ amount | money_with_currency }}</strong>{% endcapture %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +51,7 @@ Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_un
 
                     <td class="order-number__cell">
                       <span class="order-number__text">
-                        Rechnung {{ name }}
+                        Order {{ order_name }}
                       </span>
                     </td>
                 </tr>
@@ -71,31 +75,7 @@ Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_un
             <td>
 
             <h2>{{ email_title }}</h2>
-            {% if custom_message != blank %}
-              <p>{{ custom_message }}</p>
-            {% elsif reserve_inventory_until %}
-              <p>{{ email_body }}</p>
-            {% endif %}
-            <table class="row actions">
-  <tr>
-    <td class="actions__cell">
-      <table class="button main-action-cell">
-        <tr>
-          <td class="button__cell"><a href="{{ invoice_url }}" class="button__text">Vervollständigen Sie Ihren Kauf</a></td>
-        </tr>
-      </table>
-      {% if shop.url %}
-    <table class="link secondary-action-cell">
-      <tr>
-        <td class="link__cell"><a href="{{ shop.url }}" class="link__text"><span class='or'>or</span> Besuchen Sie unseres Geschäft</a></td>
-      </tr>
-    </table>
-{% endif %}
-
-    </td>
-  </tr>
-</table>
-
+            <p>{{ email_body }}</p>
 
             </td>
           </tr>
@@ -167,7 +147,7 @@ Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_un
     <td>
       <table class="row subtotal-table">
         {% if discounts %}
-          {% capture discount_title %}Rabatt{% if discounts.first.code %}({{ discounts.first.code }}){% endif %}{% endcapture %}
+          {% capture discount_title %}Discount {% if discounts.first.code %}({{ discounts.first.code }}){% endif %}{% endcapture %}
 
 <tr class="subtotal-line">
   <td class="subtotal-line__title">
@@ -281,7 +261,7 @@ Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_un
 <tr class="subtotal-line">
   <td class="subtotal-line__title">
     <p>
-      <span>Refund</span>
+      <span>Erstattung</span>
         <br>
         <small>{{ refund_method_title | capitalize }}</small>
     </p>
@@ -307,77 +287,6 @@ Dieser Artikel wird{% endif %} für Sie bis zum  <strong>{{ reserve_inventory_un
     </td>
   </tr>
 </table>
-
-          {% if shipping_address or billing_address or shipping_method %}
-            <table class="row section">
-  <tr>
-    <td class="section__cell">
-      <center>
-        <table class="container">
-          <tr>
-            <td>
-              <h3>Kundeninformation</h3>
-            </td>
-          </tr>
-        </table>
-        <table class="container">
-          <tr>
-            <td>
-
-              <table class="row">
-                <tr>
-                  {% if shipping_address %}
-                    <td class="customer-info__item">
-                      <h4>Lieferadresse</h4>
-                      <p>
-  {{ shipping_address.name }}<br/>
-  {{ shipping_address.address1 }}
-  {% if shipping_address.address2 %}
-  <br/>{{ shipping_address.address2 }}
-  {% endif %}
-  <br/>{{ shipping_address.city }}, {{ shipping_address.province }} {{ shipping_address.zip }}
-  <br/>{{ shipping_address.country }}
-</p>
-
-                    </td>
-                  {% endif %}
-
-                  {% if billing_address %}
-                    <td class="customer-info__item">
-                      <h4>Rechnungsanschrift</h4>
-                      <p>
-  {{ billing_address.name }}<br/>
-  {{ billing_address.address1 }}
-  {% if billing_address.address2 %}
-  <br/>{{ billing_address.address2 }}
-  {% endif %}
-  <br/>{{ billing_address.city }}, {{ billing_address.province }} {{ billing_address.zip }}
-  <br/>{{ billing_address.country }}
-</p>
-
-                    </td>
-                  {% endif %}
-                </tr>
-              </table>
-              {% if shipping_method %}
-                <table class="row">
-                  <tr>
-                    <td class="customer-info__item customer-info__item--last">
-                      <h4>Versandart</h4>
-                      <p>{{ shipping_method.title }}<br/>{{ shipping_method.price | money }}</p>
-                    </td>
-                  </tr>
-                </table>
-              {% endif %}
-
-            </td>
-          </tr>
-        </table>
-      </center>
-    </td>
-  </tr>
-</table>
-          {% endif %}
 
           <table class="row footer">
   <tr>
